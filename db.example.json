@@ -1,0 +1,51 @@
+{
+  "last_run": [
+    2024,
+    54,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0
+  ],
+  "trainings": [
+    {
+      "training_todo": "Back",
+      "rest_days_remaining": 0,
+      "default_rest_days": 7,,
+      "done_count": 0
+    },
+    {
+      "training_todo": "Chest",
+      "rest_days_remaining": 3,
+      "default_rest_days": 7,
+      "done_count": 0
+    },
+    {
+      "training_todo": "Schoulders",
+      "rest_days_remaining": 4,
+      "default_rest_days": 7,
+      "done_count": 0
+    },
+    {
+      "training_todo": "Neck",
+      "rest_days_remaining": 5,
+      "default_rest_days": 7,
+      "done_count": 0
+    },
+    {
+      "training_todo": "Arms",
+      "rest_days_remaining": 0,
+      "default_rest_days": 7,
+      "done_count": 0
+    },
+    {
+      "training_todo": "Abs",
+      "rest_days_remaining": 4,
+      "default_rest_days": 7,
+      "done_count": 0
+    }
+  ]
+}
