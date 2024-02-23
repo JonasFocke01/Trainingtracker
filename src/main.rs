@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 use std::io::Write;
+use std::cmp::Ordering;
 
 #[derive(Serialize, Deserialize, Debug)]
 enum TrainingTodo {
@@ -17,7 +18,7 @@ struct TrainingDetails {
     training_todo: TrainingTodo,
     rest_days_remaining: u8,
     default_rest_days: u8,
-    done_count: usize
+    done_count: usize,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -30,22 +31,35 @@ fn main() {
     let mut db_file: DBFile =
         serde_json::from_str(std::str::from_utf8(&std::fs::read("db.json").unwrap()).unwrap())
             .unwrap();
+    db_file.trainings.sort_by(|a, b| {
+        if a.rest_days_remaining > b.rest_days_remaining {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        }
+    });
 
-    let now = time::OffsetDateTime::now_local().unwrap().replace_time(time::macros::time!(0:00));
+    let now = time::OffsetDateTime::now_local()
+        .unwrap()
+        .replace_time(time::macros::time!(0:00));
 
     println!("Last run on {:?}", db_file.last_run);
-    db_file
-        .trainings
-        .iter()
-        .for_each(|training| println!("{:9?} - {}", training.training_todo, training.rest_days_remaining));
+    db_file.trainings.iter().for_each(|training| {
+        println!(
+            "{:9?} - {}",
+            training.training_todo, training.rest_days_remaining
+        )
+    });
     println!("\nTodays date is: {:?}", now);
     let days_past = now - db_file.last_run;
     db_file.last_run = now;
     println!("The difference is: {:?} days", days_past.whole_days());
-    db_file
-        .trainings
-        .iter()
-        .for_each(|training| println!("{:9?} - {}", training.training_todo, training.rest_days_remaining));
+    db_file.trainings.iter().for_each(|training| {
+        println!(
+            "{:9?} - {}",
+            training.training_todo, training.rest_days_remaining
+        )
+    });
 
     reduce_training_rest_days_remaining_by(days_past.whole_days() as u8, &mut db_file.trainings);
     let _ = std::fs::write("db.json", serde_json::to_string(&db_file).unwrap());
