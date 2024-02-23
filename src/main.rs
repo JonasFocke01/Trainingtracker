@@ -74,7 +74,7 @@ fn main() {
         .get_mut((training_done - 1) as usize)
         .unwrap();
     training_done.rest_days_remaining = training_done.default_rest_days;
-    training_done.done_count = training_done.saturating_add(1);
+    training_done.done_count = training_done.done_count.saturating_add(1);
     let _ = std::fs::write("db.json", serde_json::to_string_pretty(&db_file).unwrap());
 }
 
