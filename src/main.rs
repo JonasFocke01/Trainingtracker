@@ -12,6 +12,7 @@ enum TrainingTodo {
     Arms,
     Abs,
 }
+const DB_FILE_NAME: &str = ".trainingtracker.json";
 
 #[derive(Serialize, Deserialize)]
 struct TrainingDetails {
@@ -29,7 +30,7 @@ struct DBFile {
 
 fn main() {
     let mut db_file: DBFile =
-        serde_json::from_str(std::str::from_utf8(&std::fs::read("db.json").unwrap()).unwrap())
+        serde_json::from_str(std::str::from_utf8(&std::fs::read(DB_FILE_NAME).unwrap()).unwrap())
             .unwrap();
     db_file.trainings.sort_by(|a, b| {
         if a.rest_days_remaining > b.rest_days_remaining {
@@ -62,9 +63,10 @@ fn main() {
     });
 
     reduce_training_rest_days_remaining_by(days_past.whole_days() as u8, &mut db_file.trainings);
-    let _ = std::fs::write("db.json", serde_json::to_string(&db_file).unwrap());
-    filter_trainings(&mut db_file.trainings);
-    println!("\nWhat training did you do? (Default: None)");
+    let _ = std::fs::write(
+        DB_FILE_NAME,
+        serde_json::to_string_pretty(&db_file).unwrap(),
+    );
     db_file
         .trainings
         .iter()
@@ -90,6 +92,10 @@ fn main() {
     training_done.rest_days_remaining = training_done.default_rest_days;
     training_done.done_count = training_done.done_count.saturating_add(1);
     let _ = std::fs::write("db.json", serde_json::to_string_pretty(&db_file).unwrap());
+    let _ = std::fs::write(
+        DB_FILE_NAME,
+        serde_json::to_string_pretty(&db_file).unwrap(),
+    );
 }
 
 fn reduce_training_rest_days_remaining_by(reduce_by: u8, trainings: &mut Vec<TrainingDetails>) {
