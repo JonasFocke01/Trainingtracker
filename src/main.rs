@@ -1,3 +1,4 @@
+use json_store_rs::home_dir;
 use json_store_rs::JsonStore;
 use json_store_rs::JsonStoreError;
 use serde::Deserialize;
@@ -31,11 +32,19 @@ impl Default for DBFile {
     }
 }
 
+impl JsonStore for DBFile {
+    fn db_file_path() -> PathBuf {
+        let mut root_path = home_dir().unwrap_or_default();
+        root_path.push(DB_FILE_NAME);
+        root_path
+    }
+}
+
 fn main() {
     let mut path = PathBuf::new();
     path.push(DB_FILE_NAME);
-    let mut db: JsonStore<DBFile> = JsonStore::load(path.clone()).unwrap_or_else(|err| match err {
-        JsonStoreError::FileNotFound => JsonStore::setup(path).unwrap(),
+    let mut db: DBFile = DBFile::load().unwrap_or_else(|err| match err {
+        JsonStoreError::FileNotFound => JsonStore::setup().unwrap(),
         JsonStoreError::PathNotValid => panic!("!PathNotValid!"),
         JsonStoreError::FilecontentNotValid => unreachable!(),
         JsonStoreError::FilecontentNotValid_CreatedBackupfile => {
@@ -45,7 +54,7 @@ fn main() {
             panic!("Filecontent was not valid.\nNO BACKUP FILE CREATED!")
         }
     });
-    db.data_mut().trainings.sort_by(|a, b| {
+    db.trainings.sort_by(|a, b| {
         if a.rest_days_remaining > b.rest_days_remaining {
             Ordering::Greater
         } else {
@@ -57,24 +66,19 @@ fn main() {
         .unwrap()
         .replace_time(time::macros::time!(0:00));
 
-    println!("Last run on {:?}", db.data().last_run);
+    println!("Last run on {:?}", db.last_run);
     println!("\nTodays date is: {:?}", now);
-    let days_past = now - db.data().last_run;
-    db.data_mut().last_run = now;
+    let days_past = now - db.last_run;
+    db.last_run = now;
     println!("The difference is: {:?} days", days_past.whole_days());
 
-    reduce_training_rest_days_remaining_by(
-        days_past.whole_days() as u8,
-        &mut db.data_mut().trainings,
-    );
+    reduce_training_rest_days_remaining_by(days_past.whole_days() as u8, &mut db.trainings);
 
-    db.data()
-        .trainings
+    db.trainings
         .iter()
         .for_each(|training| println!("{:9?} - {}", training.name, training.rest_days_remaining));
     print!("\nWhat training did you do?\n(Default: None; Training name for not-listed; /* TODO: '-1' for 'did this yesterday' */)\nDue are: ");
-    db.data()
-        .trainings
+    db.trainings
         .iter()
         .filter(|training| training.rest_days_remaining == 0)
         .for_each(|training| print!("{:?}, ", training.name));
@@ -85,7 +89,6 @@ fn main() {
         print!("No training selected, abort...");
         return;
     } else if let Some(selected_training) = db
-        .data_mut()
         .trainings
         .iter_mut()
         .find(|training| training.name == selected_training_str)
